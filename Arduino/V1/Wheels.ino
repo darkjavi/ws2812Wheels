@@ -1,11 +1,15 @@
 #include <Adafruit_NeoPixel.h>
-#include <avr/power.h>
+//#include <avr/power.h>
 #include <Wire.h>
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN            6
+#define PIN            2
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS     41
+#define NUMPIXELS     83
+
+#ifdef ESP8266
+	#define A1 17
+#endif
 
 class MPU6050 {
 public:
@@ -17,7 +21,12 @@ public:
   }
   void on()
   {
+#ifdef ESP8266
+    Wire.begin(4,5);
+#else
     Wire.begin();
+#endif
+
     Wire.beginTransmission(MPU);
     Wire.write(0x6B);  // PWR_MGMT_1 register
     Wire.write(0);     // set to zero (wakes up the MPU-6050)
@@ -266,7 +275,10 @@ MPU6050 myGyro;
 
 void setup() {
   Serial.begin(115200);
+  
   Serial.println("Init...");
+  yield();
+  
   myStrip.off();
   myStrip.test();
   myStrip.off();
@@ -312,7 +324,7 @@ void setup() {
   c1.addLed(&myStrip.leds[39]);
   c1.addLed(&myStrip.leds[40]);
   c1.doubleCircleAnimation();
-  myStrip.update();
+//  myStrip.update();
 //  myGyro.init();
   Serial.println("Ok");
 }
@@ -331,7 +343,7 @@ void loop()
 //      c1.glowAnimation();
 //    }
 //  myVuMeter.analize();
-//  myGyro.fullRead();
+  myGyro.fullRead();
   c1.animate();
   myStrip.update();
   delay(delay_time);
