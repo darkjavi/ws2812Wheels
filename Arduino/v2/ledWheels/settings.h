@@ -9,13 +9,14 @@
 
 struct settingList{
     uint8_t micPin         = A0;
-    uint8_t ledStripPin    = D4;
+    uint8_t ledStripPin    = D8;
     uint8_t lednr          = 83;
     float   ledMaxBright   = 0.3;
     char id[20]            = "LedWheel";
     char wifiESSID[20]     = "LedWheel";
     char wifiPasswd[20]    = "clubmate";
     bool wifiAPMode        = true;
+    uint16_t delayTime     = 5;
     uint16_t magicNumber   = 31415;//numero de comprobacion para saber que los settings se han leido/transmitido bien.
 };
 

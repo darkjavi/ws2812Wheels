@@ -35,11 +35,16 @@ void setup()
   myLedStrip.setup();
   Serial.println("...Ready!");
   yield();
+  myLedWheel.doubleCircleEffect();
+  //myLedWheel.rainbowEffect();
 }
 
 void loop() {
-  server.handleClient();
+  httpServer.handleClient();
+  updateClients();
+
   myGyro.fullRead();
+  sendAccRead(&myGyro);
   //myGyro.dumpRead();
   myLedWheel.animate();
   myLedStrip.update();
