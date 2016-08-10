@@ -12,6 +12,12 @@ WiFiServer TCPserver(31415);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 
+void parseCommand(String* data)
+{
+
+}
+
+
 void wifi_init(settingList* settings)
 {
   if(settings->wifiAPMode)
@@ -100,12 +106,12 @@ void updateClients()
     for(i = 0; i < MAX_SRV_CLIENTS; i++){
       if (serverClients[i] && serverClients[i].connected()){
         if(serverClients[i].available()){
-          //get data from the telnet client and push it to the UART
+          String data;
           while(serverClients[i].available())
           {
-              Serial.write(serverClients[i].read());
+              data += serverClients[i].read();
           }
-
+          parseCommand(&data);
         }
       }
     }
@@ -143,6 +149,7 @@ void sendAccRead(MPU6050* g)
       }
     }
 }
+
 
 #endif // WIFI
 
