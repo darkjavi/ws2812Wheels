@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,8 +13,21 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        controlmainwindow.cpp
+        controlmainwindow.cpp \
+    connectwidget.cpp \
+    sensorswidget.cpp \
+    gwidgettxrx.cpp \
+    socketclient.cpp
 
-HEADERS  += controlmainwindow.h
+HEADERS  += controlmainwindow.h \
+    connectwidget.h \
+    sensorswidget.h \
+    gwidgettxrx.h \
+    socketclient.h
 
-FORMS    += controlmainwindow.ui
+FORMS    += controlmainwindow.ui \
+    connectwidget.ui \
+    sensorswidget.ui
+
+RESOURCES += \
+    resources.qrc

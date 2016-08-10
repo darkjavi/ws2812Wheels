@@ -94,7 +94,7 @@ void updateClients()
         if (!serverClients[i] || !serverClients[i].connected()){
           if(serverClients[i]) serverClients[i].stop();
           serverClients[i] = TCPserver.available();
-          Serial.print("New client: "); Serial.print(i);
+          Serial.print("New client: "); Serial.println(i);
           continue;
         }
       }

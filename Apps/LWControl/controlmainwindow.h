@@ -2,6 +2,8 @@
 #define CONTROLMAINWINDOW_H
 
 #include <QMainWindow>
+#include "gwidgettxrx.h"
+#include "socketclient.h"
 
 namespace Ui {
 class controlMainWindow;
@@ -16,7 +18,9 @@ public:
     ~controlMainWindow();
 
 private:
-    Ui::controlMainWindow *ui;
+    Ui::controlMainWindow   *ui;
+    socketClient            m_socketClient;
+    gWidgetTxRx             m_txWidget;
 };
 
 #endif // CONTROLMAINWINDOW_H
