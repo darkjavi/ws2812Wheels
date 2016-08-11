@@ -11,10 +11,25 @@ WiFiServer TCPserver(31415);
 #define MAX_SRV_CLIENTS 3
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
-
-void parseCommand(String* data)
+static std::vector<String> splitStr(String& str,String sep)
 {
+        std::vector<String> result;
+  if(str.length() < 1) return result;
+  int sep_index = str.indexOf(sep);
+  if(sep_index == -1)
+  {//no hay separador, se devuelve un unico elemento
+    result.push_back(str);
+    return result;
+  }
 
+  while (sep_index >= 0)
+  {
+    result.push_back(str.substring(0,sep_index));
+    str = str.substring(sep_index+sep.length());
+    sep_index = str.indexOf(sep);
+  }
+  if(str.length()) result.push_back(str);
+        return result;
 }
 
 
@@ -84,36 +99,35 @@ void wifi_init(settingList* settings)
     Serial.printf("Ready! Open http://%s.local in your browser to upgrade\n", settings->id);
 }
 
-void updateClients()
+void manageSocketClients()
 {
-    uint8_t i;
+    //find free/disconnected spot
+    for(uint8_t i = 0; i < MAX_SRV_CLIENTS; i++){
+        if(serverClients[i] && !serverClients[i].connected())
+        {
+            serverClients[i].stop();
+            Serial.print("Client disconnected"); Serial.println(i);
+        }
+    }
     //check if there are any new clients
     if (TCPserver.hasClient()){
-      for(i = 0; i < MAX_SRV_CLIENTS; i++){
+      for(uint8_t i = 0; i < MAX_SRV_CLIENTS; i++){
         //find free/disconnected spot
-        if (!serverClients[i] || !serverClients[i].connected()){
-          if(serverClients[i]) serverClients[i].stop();
+        if (!serverClients[i] || !serverClients[i].connected())
+        {
+          if(serverClients[i])
+          {
+              serverClients[i].stop();
+              Serial.print("Client disconnected"); Serial.println(i);
+          }
           serverClients[i] = TCPserver.available();
           Serial.print("New client: "); Serial.println(i);
-          continue;
+          break;
         }
       }
       //no free/disconnected spot so reject
       WiFiClient serverClient = TCPserver.available();
       serverClient.stop();
-    }
-    //check clients for data
-    for(i = 0; i < MAX_SRV_CLIENTS; i++){
-      if (serverClients[i] && serverClients[i].connected()){
-        if(serverClients[i].available()){
-          String data;
-          while(serverClients[i].available())
-          {
-              data += serverClients[i].read();
-          }
-          parseCommand(&data);
-        }
-      }
     }
 }
 

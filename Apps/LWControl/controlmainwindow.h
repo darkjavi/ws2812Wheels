@@ -21,6 +21,13 @@ private:
     Ui::controlMainWindow   *ui;
     socketClient            m_socketClient;
     gWidgetTxRx             m_txWidget;
+
+protected slots:
+    void setBrightness(int value);
+    void setColor();
+
+    void enableUI();
+    void disableUI();
 };
 
 #endif // CONTROLMAINWINDOW_H

@@ -46,3 +46,44 @@ void socketClient::sendData(QString data)
     emit tx();
     write(data.toUtf8());
 }
+
+void socketClient::off()
+{
+    sendData("off");
+}
+
+void socketClient::setColor(quint8 r, quint8 g, quint8 b)
+{
+    QString data;
+    data += "setColor|";
+    data += QString::number(r);
+    data += "|";
+    data += QString::number(g);
+    data += "|";
+    data += QString::number(b);
+
+    sendData(data);
+}
+
+void socketClient::setBrightness(float b)
+{
+    QString data;
+    data += "setBrightness|";
+    data += QString::number(b,'f',2);
+    sendData(data);
+}
+
+void socketClient::animationCircle()
+{
+    sendData("animationCircle");
+}
+
+void socketClient::animationDoubleCircle()
+{
+   sendData("animationDoubleCircle");
+}
+
+void socketClient::animationRainbow()
+{
+   sendData("animationRainbow");
+}

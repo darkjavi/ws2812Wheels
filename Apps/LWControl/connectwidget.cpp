@@ -25,6 +25,7 @@ void connectWidget::disconnected()
     ui->label->setEnabled(true);
     ui->label_2->setEnabled(true);
     ui->editPort->setEnabled(true);
+    emit notReady();
 }
 
 void connectWidget::connected()
@@ -34,6 +35,7 @@ void connectWidget::connected()
     ui->label->hide();
     ui->label_2->hide();
     ui->editPort->hide();
+    emit ready();
 }
 
 void connectWidget::connectSocket()

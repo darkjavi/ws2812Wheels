@@ -19,7 +19,12 @@ protected slots:
     void readData();
     void sendData(QString data);
 public slots:
-
+    void off();
+    void setColor(quint8 r, quint8 g, quint8 b);
+    void setBrightness(float b);
+    void animationCircle();
+    void animationDoubleCircle();
+    void animationRainbow();
 };
 
 #endif // SOCKETCLIENT_H

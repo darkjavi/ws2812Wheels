@@ -27,6 +27,10 @@ private:
     Ui::connectWidget   *ui;
     socketClient*       m_client;
 
+signals:
+    void ready();
+    void notReady();
+
 protected slots:
     void disconnected();
     void connected();

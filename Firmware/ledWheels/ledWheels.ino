@@ -41,7 +41,8 @@ void setup()
 
 void loop() {
   httpServer.handleClient();
-  updateClients();
+  manageSocketClients();
+  myLedWheel.parseClientData();
 
   myGyro.fullRead();
   sendAccRead(&myGyro);

@@ -25,8 +25,14 @@ public:
 
     void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
+        resetEffect();
         for(int i = 0 ; i < m_correctedLedArray.size() ; i++)
             m_correctedLedArray[i]->setColor(r,g,b);
+    }
+
+    void setBrightness(float b)
+    {
+        //Esto esta en la tira!
     }
 
     void resetEffect()
@@ -84,6 +90,24 @@ public:
         }
     }
 
+    void parseClientData()
+    {
+        //check clients for data
+        for(uint8_t i = 0; i < MAX_SRV_CLIENTS; i++)
+        {
+          if (serverClients[i] && serverClients[i].connected())
+          {
+            if(serverClients[i].available()){
+              String data;
+              while(serverClients[i].available())
+              {
+                  data += (char)serverClients[i].read();
+              }
+              parseCommand(data);
+            }
+          }
+        }
+    }
 
 private:
     enum effectType{
@@ -103,6 +127,51 @@ private:
     uint8_t     m_counter1;
     uint8_t     m_counter2;
     uint8_t     m_counter3;
+
+
+    void parseCommand(String& data)
+    {
+        Serial.println(data);
+        std::vector<String> args = splitStr(data,"|");
+        if(args.size() == 0)
+        {
+            Serial.print("Failed to parse msg: ");
+            Serial.println(data);
+            return;
+        }
+
+        if      (args[0] == "off")
+        {
+            resetEffect();
+        }
+        else if (args[0] == "setColor")
+        {
+            if(args.size() == 4)
+            setColor(args[1].toInt(),args[2].toInt(),args[3].toInt());
+        }
+        else if (args[0] == "setBrightness")
+        {
+            //if(args.size() == 2)
+            //set (args[1].toFloat());
+        }
+        else if (args[0] == "animationCircle")
+        {
+            circleEffect();
+        }
+        else if (args[0] == "animationDoubleCircle")
+        {
+            doubleCircleEffect();
+        }
+        else if (args[0] == "animationRainbow")
+        {
+            rainbowEffect();
+        }
+        else
+        {
+            Serial.print("Unknown command:");
+            Serial.println(args[0]);
+        }
+    }
 
     void animateCircle()
     {
