@@ -13,6 +13,8 @@ controlMainWindow::controlMainWindow(QWidget *parent) :
     connect(&m_socketClient,SIGNAL(rx()),&m_txWidget,SLOT(rx()));
 //Botones para la barra de herramientas:
     QToolButton* btnConnect     = new QToolButton(this);
+    btnConnect->setMinimumSize(128,128);
+    btnConnect->setIconSize(QSize(128,128));
     btnConnect->setIcon(QIcon(":/icons/icons/connect-icon.png"));
     connect(btnConnect,SIGNAL(toggled(bool)),ui->connectionWidget,SLOT(connectSocket(bool)));
     btnConnect->setCheckable(true);
