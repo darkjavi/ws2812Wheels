@@ -22,9 +22,14 @@ public slots:
     void off();
     void setColor(quint8 r, quint8 g, quint8 b);
     void setBrightness(float b);
+    void prevEffect();
+    void nextEffect();
     void animationCircle();
     void animationDoubleCircle();
     void animationRainbow();
+    void animationFlash();
+    void setOffset(int value);
+    void requestSensorData(bool);
 };
 
 #endif // SOCKETCLIENT_H

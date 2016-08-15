@@ -18,10 +18,10 @@
 
 
 EEPROMStorage myEEPROM;
-ws2812Strip   myLedStrip(&myEEPROM.settings());
 MPU6050       myGyro;
-ledWheel      myLedWheel(myLedStrip.getLeds(),&myGyro);
+ledWheel      myLedWheel(&myEEPROM,&myGyro);
 
+uint8_t c = 0;
 
 
 void setup()
@@ -29,25 +29,19 @@ void setup()
   Serial.begin(115200);
   Serial.println("Init...");
   yield();
+  myLedWheel.setup();
   wifi_init(&myEEPROM.settings());
   yield();
   myGyro.init();
-  myLedStrip.setup();
   Serial.println("...Ready!");
   yield();
   myLedWheel.doubleCircleEffect();
-  //myLedWheel.rainbowEffect();
+  myLedWheel.flashEffect();
 }
 
 void loop() {
   httpServer.handleClient();
   manageSocketClients();
-  myLedWheel.parseClientData();
-
-  myGyro.fullRead();
-  sendAccRead(&myGyro);
-  //myGyro.dumpRead();
-  myLedWheel.animate();
-  myLedStrip.update();
+  myLedWheel.update();
   delay(10);
 }

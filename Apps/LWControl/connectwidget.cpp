@@ -6,7 +6,6 @@ connectWidget::connectWidget(QWidget *parent) :
     ui(new Ui::connectWidget)
 {
     ui->setupUi(this);
-    connect(ui->btnConnect,SIGNAL(toggled(bool)),this,SLOT(connectSocket()));
 }
 
 connectWidget::~connectWidget()
@@ -16,11 +15,7 @@ connectWidget::~connectWidget()
 
 void connectWidget::disconnected()
 {
-    ui->btnConnect->setChecked(false);
-    ui->editIP->show();
-    ui->label->show();
-    ui->label_2->show();
-    ui->editPort->show();
+    this->show();
     ui->editIP->setEnabled(true);
     ui->label->setEnabled(true);
     ui->label_2->setEnabled(true);
@@ -30,27 +25,23 @@ void connectWidget::disconnected()
 
 void connectWidget::connected()
 {
-    ui->btnConnect->setChecked(true);
-    ui->editIP->hide();
-    ui->label->hide();
-    ui->label_2->hide();
-    ui->editPort->hide();
+    this->hide();
     emit ready();
 }
 
-void connectWidget::connectSocket()
+void connectWidget::connectSocket(bool state)
 {
-    if(!ui->btnConnect->isChecked())
+    if(!state)
         m_client->close();
     else
     {
+        m_client->close();
         m_client->connectToHost(ui->editIP->text(),ui->editPort->text().toInt());
         ui->editIP->setEnabled(false);
         ui->label->setEnabled(false);
         ui->label_2->setEnabled(false);
         ui->editPort->setEnabled(false);
     }
-
 }
 
 void connectWidget::socketError(QAbstractSocket::SocketError e)

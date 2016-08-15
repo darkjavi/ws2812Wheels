@@ -10,8 +10,8 @@
 struct settingList{
     uint8_t micPin         = A0;
     uint8_t ledStripPin    = D8;
-    uint8_t lednr          = 83;
-    float   ledMaxBright   = 0.3;
+    uint8_t lednr          = 84;
+    float   ledMaxBright   = 0.2;
     char id[20]            = "LedWheel";
     char wifiESSID[20]     = "LedWheel";
     char wifiPasswd[20]    = "clubmate";

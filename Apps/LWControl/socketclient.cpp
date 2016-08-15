@@ -44,6 +44,7 @@ void socketClient::readData()
 void socketClient::sendData(QString data)
 {
     emit tx();
+    data.append("\n");
     write(data.toUtf8());
 }
 
@@ -73,6 +74,17 @@ void socketClient::setBrightness(float b)
     sendData(data);
 }
 
+void socketClient::nextEffect()
+{
+    sendData("nextEffect");
+}
+
+void socketClient::prevEffect()
+{
+    sendData("prevEffect");
+}
+
+
 void socketClient::animationCircle()
 {
     sendData("animationCircle");
@@ -86,4 +98,27 @@ void socketClient::animationDoubleCircle()
 void socketClient::animationRainbow()
 {
    sendData("animationRainbow");
+}
+
+void socketClient::animationFlash()
+{
+    sendData("animationFlash");
+}
+
+void socketClient::setOffset(int value)
+{
+    QString str;
+    str.append("setOffset|");
+    str.append(QString::number(value));
+    sendData(str);
+}
+
+void socketClient::requestSensorData(bool value)
+{
+    if(value)
+        sendData("sendSensorsData");
+    else
+    {
+        sendData("dontSendSensorsData");
+    }
 }

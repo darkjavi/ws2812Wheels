@@ -34,7 +34,7 @@ signals:
 protected slots:
     void disconnected();
     void connected();
-    void connectSocket();
+    void connectSocket(bool state);
     void socketError(QAbstractSocket::SocketError);
 };
 

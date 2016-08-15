@@ -3,18 +3,33 @@
 
 #include "ws2812b.h"
 #include "gyro.h"
+#include "vector"
+#include "wifi.h"
 
 class ledWheel{
 public:
-    ledWheel(std::vector<ws2812Strip::led>* leds, MPU6050* gyro)
+    ledWheel(EEPROMStorage* settings, MPU6050* gyro) : m_strip(&settings->settings())
     {
-        m_rawLeds = leds;
         m_gyro = gyro;
-        for(int i = 0 ; i < m_rawLeds->size() ; i++)
-        {
-                ws2812Strip::led* l = &m_rawLeds->at(i);
-                m_correctedLedArray.push_back(l);
-        }
+        m_arrayOffset = 0;
+        m_sendingSensorData = false;
+    }
+
+    void setup()
+    {
+        m_strip.setup();
+        recalculateArray();
+        yield();
+    }
+
+    void update()
+    {
+        parseClientData();
+        m_gyro->fullRead();
+        animate();
+        if(m_sendingSensorData)
+            sendAccRead(m_gyro);
+        yield();
     }
 
     void off()
@@ -25,7 +40,6 @@ public:
 
     void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
-        resetEffect();
         for(int i = 0 ; i < m_correctedLedArray.size() ; i++)
             m_correctedLedArray[i]->setColor(r,g,b);
     }
@@ -58,14 +72,144 @@ public:
 
     void flashEffect()
     {
+        if(m_currentEffect == effectFlash)
+        {
+            m_counter1 = 250;
+            return;
+        }
+
+        m_nextEffect = m_currentEffect; //salvamos los parametros para retomar la animacion despues del flash
+        m_counter1save = m_counter1;
+        m_counter2save = m_counter2;
+        m_counter3save = m_counter3;
+
         resetEffect();
         m_currentEffect = effectFlash;
+        m_counter1 = 200;
     }
+
+    void nextEffect()
+    {
+        m_currentEffect = (effectType)((int)m_currentEffect+1);
+    }
+
+    void prevEffect()
+    {
+        m_currentEffect = (effectType)((int)m_currentEffect-1);
+    }
+
 
     void rainbowEffect()
     {
         resetEffect();
         m_currentEffect = effectRainbow;
+    }
+
+    void setPositionLights()
+    {
+        m_currentEffect = effectPositionLigths;
+        std::vector<ws2812Strip::led*> rside = getRightSide();
+        std::vector<ws2812Strip::led*> lside = getLeftSide();
+        for(int i = 0 ; i < rside.size() ; i++)
+        {
+            rside.at(i)->setColor(150,150,150);
+        }
+        for(int i = 0 ; i < lside.size() ; i++)
+        {
+            lside.at(i)->setColor(200,0,0);
+        }
+    }
+
+    void setPercentage(int percentage = 50)
+    {
+        off();
+        m_currentEffect = effectPercentage;
+        if(percentage > 100) percentage = 100;
+        std::vector<ws2812Strip::led*> rside = getRightSide();
+        std::vector<ws2812Strip::led*> lside = getLeftSide();
+        int i;
+        for(i = 0 ; i < (percentage /100.0) * rside.size() ; i++)
+        {
+            rside.at(i)->setColor(00,100,80);
+        }
+
+        for(i = 0 ; i < (percentage /100.0) * lside.size() ; i++)
+        {
+            lside.at(i)->setColor(00,100,80);
+        }
+    }
+
+    void setVUMeter(int percentage = 50, bool decayMode = true)
+    {
+        if(!decayMode)
+            resetEffect();
+        m_currentEffect = effectVUMeter;
+        if(percentage > 100) percentage = 100;
+        std::vector<ws2812Strip::led*> rside = getRightSide();
+        std::vector<ws2812Strip::led*> lside = getLeftSide();
+        int i;
+        for(i = 0 ; i < (percentage /100.0) * rside.size() ; i++)
+        {
+            uint8_t r,g,b,level,max;
+            max = (percentage /100.0) * rside.size();
+
+            level = (((float)i/max)*percentage);
+
+            if(level < 30)
+            {
+                r = 0, g = 0, b = 50+(level*4);
+            }
+            else if(level < 55)
+            {
+                r = 0,  g = 100 +(level*2), b = 0;
+            }
+            else if(level < 70)
+            {
+                r = 100+level, g = 100+level, b = 0;
+            }
+            else
+            {
+                r = 220, g = 0, b = 0;
+            }
+            rside.at(i)->setColor(r,g,b);
+        }
+        if(decayMode)
+            for(int c = i ; c < rside.size() ; c++)
+            {
+                rside.at(i)->dimm(0.1f);
+            }
+
+        for(i = 0 ; i < (percentage /100.0) * lside.size() ; i++)
+        {
+            uint8_t r,g,b,level,max;
+            max = (percentage /100.0) * lside.size();
+
+            level = (((float)i/max)*percentage);
+
+            if(level < 30)
+            {
+                r = 0, g = 0, b = 50+(level*4);
+            }
+            else if(level < 55)
+            {
+                r = 0,  g = 100 +(level*2), b = 0;
+            }
+            else if(level < 70)
+            {
+                r = 100+level, g = 100+level, b = 0;
+            }
+            else
+            {
+                r = 220, g = 0, b = 0;
+            }
+
+            lside.at(i)->setColor(r,g,b);
+        }
+        if(decayMode)
+            for(int c = i ; c < lside.size() ; c++)
+            {
+                lside.at(i)->dimm(0.95f);
+            }
     }
 
     void animate()
@@ -88,6 +232,24 @@ public:
             //recalculateArray();
             animateRainbow();
         }
+        else if (m_currentEffect == effectPositionLigths)
+        {
+            recalculateArray();
+            setPositionLights();
+        }
+        else if (m_currentEffect == effectPercentage)
+        {
+            recalculateArray();
+            setPercentage(m_counter1++);
+        }
+        else if (m_currentEffect == effectVUMeter)
+        {
+            recalculateArray();
+            setVUMeter(rand() % 80 + 20);
+        }
+
+
+        m_strip.update();
     }
 
     void parseClientData()
@@ -97,12 +259,9 @@ public:
         {
           if (serverClients[i] && serverClients[i].connected())
           {
-            if(serverClients[i].available()){
+            while(serverClients[i].available()){
               String data;
-              while(serverClients[i].available())
-              {
-                  data += (char)serverClients[i].read();
-              }
+              data = serverClients[i].readStringUntil('\n');
               parseCommand(data);
             }
           }
@@ -115,19 +274,28 @@ private:
         effectCircle,
         effectDoubleCircle,
         effectFlash,
-        effectRainbow
+        effectRainbow,
+        effectPositionLigths,
+        effectPercentage,
+        effectVUMeter
     };
 
+    ws2812Strip                         m_strip;
+    EEPROMStorage*                      m_settingsStorage;
     MPU6050*                            m_gyro;
     std::vector<ws2812Strip::led>*	m_rawLeds;
     std::vector<ws2812Strip::led*>	m_correctedLedArray;
+    uint16_t                            m_arrayOffset;
+    bool                                m_sendingSensorData;
 
     effectType  m_currentEffect;
     effectType  m_nextEffect;
     uint8_t     m_counter1;
     uint8_t     m_counter2;
     uint8_t     m_counter3;
-
+    uint8_t     m_counter1save;
+    uint8_t     m_counter2save;
+    uint8_t     m_counter3save;
 
     void parseCommand(String& data)
     {
@@ -147,12 +315,23 @@ private:
         else if (args[0] == "setColor")
         {
             if(args.size() == 4)
-            setColor(args[1].toInt(),args[2].toInt(),args[3].toInt());
+            {
+              resetEffect();
+              setColor(args[1].toInt(),args[2].toInt(),args[3].toInt());
+            }
         }
         else if (args[0] == "setBrightness")
         {
-            //if(args.size() == 2)
-            //set (args[1].toFloat());
+            if(args.size() == 2)
+                m_strip.setBrightness(args[1].toFloat());
+        }
+        else if (args[0] == "nextEffect")
+        {
+            nextEffect();
+        }
+        else if (args[0] == "prevEffect")
+        {
+            prevEffect();
         }
         else if (args[0] == "animationCircle")
         {
@@ -165,6 +344,25 @@ private:
         else if (args[0] == "animationRainbow")
         {
             rainbowEffect();
+        }
+        else if (args[0] == "animationFlash")
+        {
+            flashEffect();
+        }
+        else if (args[0] == "setOffset")
+        {
+            if(args.size() == 2)
+            {
+                m_arrayOffset = args[1].toInt();
+            }
+        }
+        else if (args[0] == "sendSensorsData")
+        {
+            m_sendingSensorData = true;
+        }
+        else if (args[0] == "dontSendSensorsData")
+        {
+            m_sendingSensorData = false;
         }
         else
         {
@@ -200,7 +398,17 @@ private:
 
     void animateFlash()
     {
-
+        setColor(m_counter1,m_counter1,m_counter1);
+        if(m_counter1 > 0)
+            m_counter1 -= 25;
+        else
+        {
+            resetEffect(); // al vaciar el contador se retorna al efecto anterior
+            m_currentEffect = m_nextEffect;
+            m_counter1 = m_counter1save;
+            m_counter2 = m_counter2save;
+            m_counter3 = m_counter3save;
+        }
     }
 
     void animateRainbow()
@@ -232,12 +440,39 @@ private:
     void recalculateArray()
     {
             m_correctedLedArray.clear();
-            for(int i = 0 ; i < m_rawLeds->size() ; i++)
+            uint8_t offsetleds = m_arrayOffset*m_strip.getLeds()->size()/360;
+
+            for(int i = offsetleds ; i < m_strip.getLeds()->size() ; i++)
             {
-                    ws2812Strip::led* l = &m_rawLeds->at(i);
+                    ws2812Strip::led* l = &m_strip.getLeds()->at(i);
+                    m_correctedLedArray.push_back(l);
+            }
+
+            for(int i = 0 ; i < offsetleds ; i++)
+            {
+                    ws2812Strip::led* l = &m_strip.getLeds()->at(i);
                     m_correctedLedArray.push_back(l);
             }
     }
 
+    std::vector<ws2812Strip::led*> getRightSide()
+    {
+        std::vector<ws2812Strip::led*> result;
+        for(int i = m_correctedLedArray.size()-1 ; i > m_correctedLedArray.size()/2 ; i --)
+        {
+            result.push_back(m_correctedLedArray.at(i));
+        }
+        return result;
+    }
+
+    std::vector<ws2812Strip::led*> getLeftSide()
+    {
+        std::vector<ws2812Strip::led*> result;
+        for(int i = 0 ; i < m_correctedLedArray.size()/2 ; i ++)
+        {
+            result.push_back(m_correctedLedArray.at(i));
+        }
+        return result;
+    }
 };
 #endif // LEDWHEEL
