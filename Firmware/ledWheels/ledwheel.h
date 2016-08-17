@@ -5,10 +5,11 @@
 #include "gyro.h"
 #include "vector"
 #include "wifi.h"
+#include "sound.h"
 
 class ledWheel{
 public:
-    ledWheel(EEPROMStorage* settings, MPU6050* gyro) : m_strip(&settings->settings())
+    ledWheel(EEPROMStorage* settings, MPU6050* gyro) : m_strip(&settings->settings()) , m_vuMeter(A0)
     {
         m_gyro = gyro;
         m_arrayOffset = 0;
@@ -28,7 +29,7 @@ public:
         m_gyro->fullRead();
         animate();
         if(m_sendingSensorData)
-            sendAccRead(m_gyro);
+            sendSesorRead();
         yield();
     }
 
@@ -144,79 +145,33 @@ public:
         if(!decayMode)
             resetEffect();
         m_currentEffect = effectVUMeter;
-        if(percentage > 100) percentage = 100;
-        std::vector<ws2812Strip::led*> rside = getRightSide();
+
+        std::vector<ws2812Strip::led*> rside = invertLedOrder(getRightSide());
         std::vector<ws2812Strip::led*> lside = getLeftSide();
-        int i;
-        for(i = 0 ; i < (percentage /100.0) * rside.size() ; i++)
+        paintVuMeterBar(rside,percentage,0.8);
+        paintVuMeterBar(lside,percentage,0.8);
+    }
+
+    void setLigthOfSpeed(int value = 0)
+    {
+        m_currentEffect = effectSpeedLight;
+        uint8_t r,g,b;
+        r=0,g=0,b=0;
+        if(value >= 0)
         {
-            uint8_t r,g,b,level,max;
-            max = (percentage /100.0) * rside.size();
-
-            level = (((float)i/max)*percentage);
-
-            if(level < 30)
-            {
-                r = 0, g = 0, b = 50+(level*4);
-            }
-            else if(level < 55)
-            {
-                r = 0,  g = 100 +(level*2), b = 0;
-            }
-            else if(level < 70)
-            {
-                r = 100+level, g = 100+level, b = 0;
-            }
-            else
-            {
-                r = 220, g = 0, b = 0;
-            }
-            rside.at(i)->setColor(r,g,b);
+            b = (value/32768.0f)*255;
         }
-        if(decayMode)
-            for(int c = i ; c < rside.size() ; c++)
-            {
-                rside.at(i)->dimm(0.1f);
-            }
-
-        for(i = 0 ; i < (percentage /100.0) * lside.size() ; i++)
+        if(value < 0)
         {
-            uint8_t r,g,b,level,max;
-            max = (percentage /100.0) * lside.size();
-
-            level = (((float)i/max)*percentage);
-
-            if(level < 30)
-            {
-                r = 0, g = 0, b = 50+(level*4);
-            }
-            else if(level < 55)
-            {
-                r = 0,  g = 100 +(level*2), b = 0;
-            }
-            else if(level < 70)
-            {
-                r = 100+level, g = 100+level, b = 0;
-            }
-            else
-            {
-                r = 220, g = 0, b = 0;
-            }
-
-            lside.at(i)->setColor(r,g,b);
+            r = (-value/32768.0f)*255;
         }
-        if(decayMode)
-            for(int c = i ; c < lside.size() ; c++)
-            {
-                lside.at(i)->dimm(0.95f);
-            }
+        setColor(r,g,b);
     }
 
     void animate()
     {
         if      (m_currentEffect == effectCircle)
         {
-            //recalculateArray();
             animateCircle();
         }
         else if (m_currentEffect == effectDoubleCircle)
@@ -229,7 +184,6 @@ public:
         }
         else if (m_currentEffect == effectRainbow)
         {
-            //recalculateArray();
             animateRainbow();
         }
         else if (m_currentEffect == effectPositionLigths)
@@ -245,9 +199,12 @@ public:
         else if (m_currentEffect == effectVUMeter)
         {
             recalculateArray();
-            setVUMeter(rand() % 80 + 20);
+            setVUMeter(m_vuMeter.read()*100/1024);
         }
-
+        else if (m_currentEffect == effectSpeedLight)
+        {
+            setLigthOfSpeed(m_gyro->GyX);
+        }
 
         m_strip.update();
     }
@@ -277,12 +234,14 @@ private:
         effectRainbow,
         effectPositionLigths,
         effectPercentage,
-        effectVUMeter
+        effectVUMeter,
+        effectSpeedLight
     };
 
     ws2812Strip                         m_strip;
     EEPROMStorage*                      m_settingsStorage;
     MPU6050*                            m_gyro;
+    vuMeter                             m_vuMeter;
     std::vector<ws2812Strip::led>*	m_rawLeds;
     std::vector<ws2812Strip::led*>	m_correctedLedArray;
     uint16_t                            m_arrayOffset;
@@ -296,6 +255,7 @@ private:
     uint8_t     m_counter1save;
     uint8_t     m_counter2save;
     uint8_t     m_counter3save;
+
 
     void parseCommand(String& data)
     {
@@ -371,6 +331,42 @@ private:
         }
     }
 
+    void sendSesorRead()
+    {
+        MPU6050* g = m_gyro;
+        String str;
+        str += "AcX:";
+        str += g->AcX;
+        str += "|";
+        str += "AcY:";
+        str += g->AcY;
+        str += "|";
+        str += "AcZ:";
+        str += g->AcZ;
+        str += "|";
+        str += "GyX:";
+        str += g->GyX;
+        str += "|";
+        str += "GyY:";
+        str += g->GyY;
+        str += "|";
+        str += "GyZ:";
+        str += g->GyZ;
+        str += "|";
+        str += "AcX:";
+        str += g->Temp;
+        str += "|";
+        str += "vuMeter:";
+        str += m_vuMeter.read();
+        str += "\n";
+
+        for(int i = 0; i < MAX_SRV_CLIENTS; i++){
+          if (serverClients[i] && serverClients[i].connected())
+          {
+            serverClients[i].print(str);
+          }
+        }
+    }
     void animateCircle()
     {
         if(m_counter1 == m_correctedLedArray.size()-1) m_counter1 = 0;
@@ -455,6 +451,16 @@ private:
             }
     }
 
+    std::vector<ws2812Strip::led*> invertLedOrder(const std::vector<ws2812Strip::led*> array)
+    {
+        std::vector<ws2812Strip::led*> result;
+        for(int i = array.size()-1 ; i>= 0  ; i-- )
+        {
+            result.push_back(array[i]);
+        }
+        return result;
+    }
+
     std::vector<ws2812Strip::led*> getRightSide()
     {
         std::vector<ws2812Strip::led*> result;
@@ -473,6 +479,42 @@ private:
             result.push_back(m_correctedLedArray.at(i));
         }
         return result;
+    }
+
+    void paintVuMeterBar(std::vector<ws2812Strip::led*> array, uint8_t percentage, float decay = 0.3)
+    {
+        if(percentage > 100) percentage = 100;
+        int i;
+        for(i = 0 ; i < (percentage /100.0) * array.size() ; i++)
+        {
+            uint8_t r,g,b,level,max;
+            max = (percentage /100.0) * array.size();
+
+            level = (((float)i/max)*percentage);
+
+            if(level < 30)
+            {
+                r = 0, g = 0, b = 50+(level*4);
+            }
+            else if(level < 55)
+            {
+                r = 0,  g = 100 +(level*2), b = 0;
+            }
+            else if(level < 70)
+            {
+                r = 100+level, g = 100+level, b = 0;
+            }
+            else
+            {
+                r = 220, g = 0, b = 0;
+            }
+            array.at(i)->setColor(r,g,b);
+        }
+
+        for(int c = i ; c < array.size() ; c++)
+        {
+            array.at(c)->dimm(decay);
+        }
     }
 };
 #endif // LEDWHEEL

@@ -13,7 +13,7 @@ public:
   void on()
   {
 
-    Wire.begin();
+    Wire.begin(D6,D5);
     Wire.beginTransmission(MPU);
     Wire.write(0x6B);  // PWR_MGMT_1 register
     Wire.write(0);     // set to zero (wakes up the MPU-6050)
@@ -22,7 +22,7 @@ public:
   }
   void off()
   {
-    Wire.begin();
+    Wire.begin(D6,D5);
     Wire.beginTransmission(MPU);
     Wire.write(0x6B);  // PWR_MGMT_1 register
     Wire.write(1);     // apagar?
@@ -44,22 +44,15 @@ public:
     AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
     AcY=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
     AcZ=Wire.read()<<8|Wire.read();  // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
-    Temp = ( (Wire.read()<<8|Wire.read()) /340.00+36.53);  // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+    Temp = Wire.read()<<8|Wire.read();  // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
     GyX=Wire.read()<<8|Wire.read();  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
     GyY=Wire.read()<<8|Wire.read();  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
     GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+
+    //Serial.println(Temp/340.00+36.53);// equation for temperature in degrees C from datasheet
+    Temp = Temp/340.00+36.53;
   }
 
-//  void dumpRead()
-//  {
-//    Serial.print("ax:"); Serial.println(AcX);
-//    Serial.print("ay:"); Serial.println(AcY);
-//    Serial.print("az:"); Serial.println(AcZ);
-//    Serial.print("gx:"); Serial.println(GyX);
-//    Serial.print("gy:"); Serial.println(GyY);
-//    Serial.print("gz:"); Serial.println(GyZ);
-//      Serial.print("Temp: "); Serial.println(Temp/340.00+36.53);  //equation for temperature in degrees C from datasheet
-//  }
 
   int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ;
   float     Temp;
@@ -70,4 +63,3 @@ public:
 };
 
 #endif // GYRO
-

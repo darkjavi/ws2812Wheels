@@ -130,40 +130,5 @@ void manageSocketClients()
       serverClient.stop();
     }
 }
-
-void sendAccRead(MPU6050* g)
-{
-    String str;
-    str += "AcX:";
-    str += g->AcX;
-    str += "|";
-    str += "AcY:";
-    str += g->AcY;
-    str += "|";
-    str += "AcZ:";
-    str += g->AcZ;
-    str += "|";
-    str += "GyX:";
-    str += g->GyX;
-    str += "|";
-    str += "GyY:";
-    str += g->GyY;
-    str += "|";
-    str += "GyZ:";
-    str += g->GyZ;
-    str += "|";
-    str += "AcX:";
-    str += g->Temp;
-    str += "\n";
-
-    for(int i = 0; i < MAX_SRV_CLIENTS; i++){
-      if (serverClients[i] && serverClients[i].connected())
-      {
-        serverClients[i].print(str);
-      }
-    }
-}
-
-
 #endif // WIFI
 

@@ -35,7 +35,7 @@ void setup()
   myGyro.init();
   Serial.println("...Ready!");
   yield();
-  myLedWheel.doubleCircleEffect();
+  myLedWheel.setLigthOfSpeed();
   myLedWheel.flashEffect();
 }
 
@@ -43,5 +43,5 @@ void loop() {
   httpServer.handleClient();
   manageSocketClients();
   myLedWheel.update();
-  delay(10);
+  yield();
 }

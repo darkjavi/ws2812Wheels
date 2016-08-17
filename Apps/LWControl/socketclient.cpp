@@ -16,23 +16,24 @@ void socketClient::readData()
     if(data.startsWith("AcX"))
     {
         QStringList fields = data.split("|");
-        if(fields.count() != 7)
+        if(fields.count() != 8)
         {
             qDebug() << "Unexpected number of fields to parse";
             qDebug() << fields;
             return;
         }
 
-        int AcX,AcY,AcZ,Gx,Gy,Gz;
+        int AcX,AcY,AcZ,Gx,Gy,Gz,vuLevel;
         float Temp;
-        AcX =   fields[0].split(":")[1].toInt();
-        AcY =   fields[1].split(":")[1].toInt();
-        AcZ =   fields[2].split(":")[1].toInt();
-        Gx =    fields[3].split(":")[1].toInt();
-        Gy =    fields[4].split(":")[1].toInt();
-        Gz =    fields[5].split(":")[1].toInt();
-        Temp =  fields[6].split(":")[1].toFloat();
-        emit accRead(Gx,Gy,Gz,AcX,AcY,AcZ,Temp);
+        AcX     =   fields[0].split(":")[1].toInt();
+        AcY     =   fields[1].split(":")[1].toInt();
+        AcZ     =   fields[2].split(":")[1].toInt();
+        Gx      =   fields[3].split(":")[1].toInt();
+        Gy      =   fields[4].split(":")[1].toInt();
+        Gz      =   fields[5].split(":")[1].toInt();
+        Temp    =   fields[6].split(":")[1].toFloat();
+        vuLevel =   fields[7].split(":")[1].toInt();
+        emit sensorRead(Gx,Gy,Gz,AcX,AcY,AcZ,Temp,vuLevel);
     }
     else
     {
@@ -47,6 +48,8 @@ void socketClient::sendData(QString data)
     data.append("\n");
     write(data.toUtf8());
 }
+
+
 
 void socketClient::off()
 {

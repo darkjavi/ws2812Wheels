@@ -13,7 +13,7 @@ sensorsWidget::~sensorsWidget()
     delete ui;
 }
 
-void sensorsWidget::accRead(int Gx, int Gy, int Gz, int AcX, int AcY, int AcZ, float Temp)
+void sensorsWidget::sensorRead(int Gx, int Gy, int Gz, int AcX, int AcY, int AcZ, float Temp, int vuLevel)
 {
     ui->dial_gx->setValue(Gx);
     ui->valueLabel_gx->setText(QString::number(Gx));
@@ -35,4 +35,7 @@ void sensorsWidget::accRead(int Gx, int Gy, int Gz, int AcX, int AcY, int AcZ, f
 
     ui->progressBar_temp->setValue(Temp);
     ui->valueLabel_temp->setText(QString::number(Temp));
+
+    ui->progressBar_vuLevel->setValue(vuLevel);
+    ui->valueLabel_vuLevel->setText(QString::number(vuLevel));
 }

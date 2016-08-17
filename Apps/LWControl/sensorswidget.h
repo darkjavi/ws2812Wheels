@@ -18,14 +18,14 @@ public:
     void setClient(socketClient* c)
     {
         m_client = c;
-        connect(c,SIGNAL(accRead(int,int,int,int,int,int,float)),this,SLOT(accRead(int,int,int,int,int,int,float)));
+        connect(c,SIGNAL(sensorRead(int,int,int,int,int,int,float,int)),this,SLOT(sensorRead(int,int,int,int,int,int,float,int)));
     }
 private:
     Ui::sensorsWidget   *ui;
     socketClient*       m_client;
 
 protected slots:
-    void accRead(int Gx,int Gy,int Gz,int AcX,int AcY,int AcZ,float Temp);
+    void sensorRead(int Gx, int Gy, int Gz, int AcX, int AcY, int AcZ, float Temp, int vuLevel);
 };
 
 #endif // SENSORSWIDGET_H
