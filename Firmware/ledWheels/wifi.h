@@ -35,7 +35,54 @@ static std::vector<String> splitStr(String& str,String sep)
 
 void wifi_init(settingList* settings)
 {
-  if(settings->wifiAPMode)
+
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    bool overmindFound = false;
+
+    int n = WiFi.scanNetworks();
+    Serial.println("scan done");
+    if (n == 0)
+      Serial.println("no networks found");
+    else
+    {
+      Serial.print(n);
+      Serial.println(" networks found");
+      for (int i = 0; i < n; ++i)
+      {
+        // Print SSID and RSSI for each network found
+        Serial.print(i + 1);
+        Serial.print(": ");
+        Serial.print(WiFi.SSID(i));
+        Serial.print(" (");
+        Serial.print(WiFi.RSSI(i));
+        Serial.print(")");
+        Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE)?" ":"*");
+        if(WiFi.SSID(i) == "overmind")
+        {
+            Serial.print("Overmind found, joining..");
+            Serial.print(WiFi.SSID(i));
+            Serial.print(" - ");
+            Serial.println("obeytheoverlord");
+            WiFi.softAPdisconnect(true);
+            yield();
+            WiFi.mode(WIFI_STA);
+            char ssid[21];
+            WiFi.SSID(i).toCharArray(ssid,20);
+            const char pass[] = "obeytheoverlord";
+            WiFi.begin(ssid, pass);
+            yield();
+            overmindFound = true;
+        }
+      }
+    }
+
+
+  if(overmindFound)
+  {
+     // nothing
+  }
+  else if(settings->wifiAPMode)
   {
       Serial.print("AP_MODE:");
       Serial.print(settings->wifiESSID);

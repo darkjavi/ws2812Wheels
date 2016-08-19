@@ -17,17 +17,20 @@ SOURCES += main.cpp\
     connectwidget.cpp \
     sensorswidget.cpp \
     gwidgettxrx.cpp \
-    socketclient.cpp
+    socketclient.cpp \
+    gsimplegraph.cpp
 
 HEADERS  += controlmainwindow.h \
     connectwidget.h \
     sensorswidget.h \
     gwidgettxrx.h \
-    socketclient.h
+    socketclient.h \
+    gsimplegraph.h
 
 FORMS    += controlmainwindow.ui \
     connectwidget.ui \
-    sensorswidget.ui
+    sensorswidget.ui \
+    gsimplegraph.ui
 
 RESOURCES += \
     resources.qrc
