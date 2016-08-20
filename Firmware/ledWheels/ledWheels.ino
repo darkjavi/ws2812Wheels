@@ -34,7 +34,7 @@ void setup()
   Serial.println("...Ready!");
   yield();
   //myLedWheel.setLigthOfSpeed();
-  myLedWheel.setPositionLights();
+  myLedWheel.setPositionLights();;
   myLedWheel.flashEffect();
 }
 
@@ -42,5 +42,5 @@ void loop() {
   httpServer.handleClient();
   manageSocketClients();
   myLedWheel.update();
-  delay(15);
+  delay(10);
 }

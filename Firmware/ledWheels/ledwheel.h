@@ -26,12 +26,14 @@ public:
 
     void update()
     {
-        parseClientData();
         m_gyro->fullRead();
+        m_vuMeter.update();
         animate();
+
         if(m_sendingSensorData)
             sendSensorRead();
         yield();
+        parseClientData();
     }
 
     void off()
@@ -176,6 +178,7 @@ public:
     {
         if      (m_currentEffect == effectCircle)
         {
+            recalculateArray();
             animateCircle();
         }
         else if (m_currentEffect == effectDoubleCircle)
@@ -187,10 +190,20 @@ public:
         {
             animateFlash();
         }
+        else if (m_currentEffect == effectCross)
+        {
+            recalculateArray();
+            animateCross();
+        }
         else if (m_currentEffect == effectRainbow)
         {
             recalculateArray();
             animateRainbow();
+        }
+        else if (m_currentEffect == effectStationaryRainbow)
+        {
+            recalculateArray();
+            animateStationaryRainbow();
         }
         else if (m_currentEffect == effectPositionLigths)
         {
@@ -205,7 +218,7 @@ public:
         else if (m_currentEffect == effectVUMeter)
         {
             recalculateArray();
-            setVUMeter(m_vuMeter.read()*100/750);
+            setVUMeter(m_vuMeter.value()*100/700);
         }
         else if (m_currentEffect == effectSpeedLight)
         {
@@ -236,12 +249,14 @@ private:
         effectNone,
         effectCircle,
         effectDoubleCircle,
-        effectFlash,
+        effectCross,
         effectRainbow,
+        effectStationaryRainbow,
         effectPositionLigths,
         effectPercentage,
         effectVUMeter,
-        effectSpeedLight
+        effectSpeedLight,
+        effectFlash
     };
 
     ws2812Strip                         m_strip;
@@ -251,16 +266,18 @@ private:
     std::vector<ws2812Strip::led>*	m_rawLeds;
     std::vector<ws2812Strip::led*>	m_correctedLedArray;
     uint16_t                            m_arrayOffset;
+    uint16_t                            m_lastArrayOffset;
+    uint8_t                             m_dropCount;
     bool                                m_sendingSensorData;
 
     effectType  m_currentEffect;
     effectType  m_nextEffect;
-    uint8_t     m_counter1;
-    uint8_t     m_counter2;
-    uint8_t     m_counter3;
-    uint8_t     m_counter1save;
-    uint8_t     m_counter2save;
-    uint8_t     m_counter3save;
+    uint16_t     m_counter1;
+    uint16_t     m_counter2;
+    uint16_t     m_counter3;
+    uint16_t     m_counter1save;
+    uint16_t     m_counter2save;
+    uint16_t     m_counter3save;
 
 
     void parseCommand(String& data)
@@ -363,7 +380,7 @@ private:
         str += g->Temp;
         str += "|";
         str += "vuMeter:";
-        str += m_vuMeter.read();
+        str += m_vuMeter.value();
         str += "\n";
 
         for(int i = 0; i < MAX_SRV_CLIENTS; i++){
@@ -373,6 +390,7 @@ private:
           }
         }
     }
+
     void animateCircle()
     {
         if(m_counter1 == m_correctedLedArray.size()-1) m_counter1 = 0;
@@ -398,6 +416,49 @@ private:
         m_counter2--;
     }
 
+    void animateCross()
+    {
+        off();
+        std::vector<ws2812Strip::led*> rside = getRightSide();
+        std::vector<ws2812Strip::led*> lside = getLeftSide();
+
+        rside.at(8)->setColor (150,150,0);
+        rside.at(9)->setColor (150,150,0);
+        rside.at(10)->setColor(150,150,0);
+        rside.at(11)->setColor(150,150,0);
+        rside.at(12)->setColor(150,150,0);
+        rside.at(13)->setColor(150,150,0);
+        rside.at(14)->setColor(150,150,0);
+        rside.at(15)->setColor(150,150,0);
+
+        rside.at(30)->setColor(120,120,120);
+        rside.at(31)->setColor(120,120,120);
+        rside.at(32)->setColor(120,120,120);
+        rside.at(33)->setColor(120,120,120);
+        rside.at(34)->setColor(120,120,120);
+        rside.at(35)->setColor(120,120,120);
+        rside.at(36)->setColor(120,120,120);
+        rside.at(37)->setColor(120,120,120);
+
+        lside.at(8)->setColor (10,10,200);
+        lside.at(9)->setColor (10,10,200);
+        lside.at(10)->setColor(10,10,200);
+        lside.at(11)->setColor(10,10,200);
+        lside.at(12)->setColor(10,10,200);
+        lside.at(13)->setColor(10,10,200);
+        lside.at(14)->setColor(10,10,200);
+        lside.at(15)->setColor(10,10,200);
+
+        lside.at(30)->setColor(120,120,120);
+        lside.at(31)->setColor(120,120,120);
+        lside.at(32)->setColor(120,120,120);
+        lside.at(33)->setColor(120,120,120);
+        lside.at(34)->setColor(120,120,120);
+        lside.at(35)->setColor(120,120,120);
+        lside.at(36)->setColor(120,120,120);
+        lside.at(37)->setColor(120,120,120);
+    }
+
     void animateFlash()
     {
         setColor(m_counter1,m_counter1,m_counter1);
@@ -411,6 +472,13 @@ private:
             m_counter2 = m_counter2save;
             m_counter3 = m_counter3save;
         }
+    }
+
+    void animateStationaryRainbow()
+    {
+        resetEffect();
+        m_currentEffect = effectStationaryRainbow;
+        animateRainbow();
     }
 
     void animateRainbow()
@@ -441,63 +509,13 @@ private:
 
     void recalculateArray()
     {
-            //int gyroXval = m_gyro->GyX;
-
-//            if(gyroXval >=0)
-//            {
-//                int extraOffset = gyroXval*6/32768;
-//                m_arrayOffset = extraOffset+m_arrayOffset;
-//                if(m_arrayOffset > 360)
-//                {
-//                    m_arrayOffset -= 360;
-//                }
-//            }
-
-            float angle = abs(m_gyro->AcY*90/16000);
-            if(angle > 90)
-                return;
-
-            if(m_gyro->GyX > -200)
-            {
-                if(m_gyro->AcY > 0)
-                {
-                    if(m_gyro->acyRising)
-                        m_arrayOffset = 180+angle;
-                    else
-                        m_arrayOffset = 360-angle;
-
-                }
-                else if(m_gyro->AcY < 0)
-                {
-                    if(m_gyro->acyRising)
-                        m_arrayOffset = 180-angle;
-                    else
-                        m_arrayOffset = angle;
-                }
-
-            }
-            else if(m_gyro->GyX < -300)
-            {
-                if(m_gyro->AcY > 0)
-                {
-                    if(m_gyro->acyRising)
-                        m_arrayOffset = 360-angle;
-                    else
-                        m_arrayOffset = 180+angle;
-                }
-                else if(m_gyro->AcY < 0)
-                {
-                    if(m_gyro->acyRising)
-                        m_arrayOffset = angle;
-                    else
-                        m_arrayOffset = 180-angle;
-                }
-
-            }
-
+            m_lastArrayOffset = m_arrayOffset;
 
             m_correctedLedArray.clear();
             uint8_t offsetleds = m_arrayOffset*m_strip.getLeds()->size()/360;
+            offsetleds += m_gyro->angleY*m_strip.getLeds()->size()/360;
+            if(offsetleds > 360)
+                offsetleds -= 360;
 
             for(int i = offsetleds ; i < m_strip.getLeds()->size() ; i++)
             {

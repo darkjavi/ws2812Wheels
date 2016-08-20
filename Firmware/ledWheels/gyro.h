@@ -67,6 +67,7 @@ public:
       lastGyX  = GyY;
       lastGyX  = GyZ;
       lastTemp = Temp;
+      calcAngles(false);
   }
 
   void fullRead()
@@ -77,62 +78,6 @@ public:
               return;
       }
 
-/*
-      MPU6050_ReadData();
-
-      angle_x_gyro = (gyro_x_scalled*((float)dt/1000)+angle_x);
-      angle_y_gyro = (gyro_y_scalled*((float)dt/1000)+angle_y);
-      angle_z_gyro = (gyro_z_scalled*((float)dt/1000)+angle_z);
-
-      angle_z_accel = atan(accel_z_scalled/(sqrt(accel_y_scalled*accel_y_scalled+accel_x_scalled*accel_x_scalled)))*(float)rad2degree;
-      angle_y_accel = -atan(accel_y_scalled/(sqrt(accel_y_scalled*accel_y_scalled+accel_z_scalled*accel_z_scalled)))*(float)rad2degree;
-      angle_x_accel = atan(accel_x_scalled/(sqrt(accel_x_scalled*accel_x_scalled+accel_z_scalled*accel_z_scalled)))*(float)rad2degree;
-
-      angle_x = Filter_gain*angle_x_gyro+(1-Filter_gain)*angle_x_accel;
-      angle_y = Filter_gain*angle_y_gyro+(1-Filter_gain)*angle_y_accel;
-      angle_z = Filter_gain*angle_z_gyro+(1-Filter_gain)*angle_z_accel;
-
-      Temp = temp_scalled;
-
-
-      Serial.print(gyro_x_scalled);
-      Serial.print("\t");
-      Serial.print(gyro_y_scalled);
-      Serial.print("\t");
-      Serial.print(gyro_z_scalled);
-      Serial.print("\t");
-
-
-      Serial.print(accel_x_scalled);
-      Serial.print("\t");
-      Serial.print(accel_y_scalled);
-      Serial.print("\t");
-      Serial.print(accel_z_scalled);
-      Serial.print("\t");
-
-      Serial.print(angle_x_gyro);
-      Serial.print("\t");
-      Serial.print(angle_y_gyro);
-      Serial.print("\t");
-      Serial.print(angle_z_gyro);
-      Serial.print("\t");
-
-      Serial.print(angle_x_accel);
-      Serial.print("\t");
-      Serial.print(angle_y_accel);
-      Serial.print("\t");
-      Serial.print(angle_z_accel);
-      Serial.print("\t");
-
-
-      Serial.print(angle_x);
-      Serial.print("\t");
-      Serial.print(angle_y);
-      Serial.print("\t");
-      Serial.println(angle_z);
-      yield();
-      return;
-*/
     lastAcX  = AcX;
     lastAcY  = AcY;
     lastAcZ  = AcZ;
@@ -178,10 +123,101 @@ public:
     aczRising = AcZ > lastAcZ;
 
     Temp = Temp/340.00+36.53;
+    calcAngles();
   }
 
-  //float angle_x_gyro=0,angle_y_gyro=0,angle_z_gyro=0,angle_x_accel=0,angle_y_accel=0,angle_z_accel=0,angle_x=0,angle_y=0,angle_z=0;
-  int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ,lastAcX,lastAcY,lastAcZ,lastGyX,lastGyY,lastGyZ;
+void calcAngles(bool filter = true)
+{
+    float angle = abs(AcY*90/17500);
+    if(angle > 90)
+        return;
+
+    float calcAngleY = angleY;
+
+    if(GyX > -225)
+    {
+        if(AcY > 0)
+        {
+            if(acyRising)
+                calcAngleY = 180+angle;
+            else
+                calcAngleY = 360-angle;
+
+        }
+        else if(AcY < 0)
+        {
+            if(acyRising)
+                calcAngleY = 180-angle;
+            else
+                calcAngleY = angle;
+        }
+
+    }
+    else if(GyX < -285)
+    {
+        if(AcY > 0)
+        {
+            if(acyRising)
+                calcAngleY = 360-angle;
+            else
+                calcAngleY = 180+angle;
+        }
+        else if(AcY < 0)
+        {
+            if(acyRising)
+                calcAngleY = angle;
+            else
+                calcAngleY = 180-angle;
+        }
+    }
+
+
+    if(!filter)
+    {
+        angleY = calcAngleY;
+        return;
+    }
+
+    float angleDiff = getAngleDifference(calcAngleY,angleY);
+
+//filtrado de datos basico. (misma direccion, rango dentro del esperado)
+        float expectedIncrement;
+
+        if(abs(GyX) < 32000)
+        {
+            expectedIncrement = GyX * 30.0f /32768.0f;
+            if(abs(expectedIncrement) < 5)
+            {
+                expectedIncrement = 5;
+                if(GyX < 0)
+                    expectedIncrement *= -1;
+            }
+        }
+        else
+        {
+            expectedIncrement = 50;
+            if(GyX < 0)
+                expectedIncrement *= -1;
+        }
+
+        if(expectedIncrement<0)
+        {
+            if( (angleDiff > expectedIncrement) && (angleDiff < 0) )
+                    angleY = calcAngleY;
+        }
+        else
+        {
+            if( (angleDiff < expectedIncrement) && (angleDiff > 0) )
+                    angleY = calcAngleY;
+        }
+
+        //GyY = calcAngleY;
+        //GyZ = angleDiff;
+        //AcX = angleY;
+        //AcZ = expectedIncrement;
+}
+
+  int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ,lastAcX,lastAcY,lastAcZ,lastGyX,lastGyY,lastGyZ, angleX,angleY,angleZ,lastAngleX,lastAngleY,lastAngleZ;
   bool      acxRising,acyRising,aczRising;
   float     Temp,lastTemp;
 
@@ -189,6 +225,28 @@ protected:
     bool	  m_activated = false;
     const int     MPU=0x68;  // I2C address of the MPU-6050
 
+    float getAngleDifference(float a, float b)
+    {
+        float distanceA = 0;
+        float distanceB = 0;
+
+        distanceA = a-b;
+        distanceB = a-b;
+        if(distanceB >0)
+        {
+            distanceB -= 360;
+        }
+        else
+        {
+            distanceB += 360;
+        }
+
+
+        if(abs(distanceA) < abs(distanceB))
+            return distanceA;
+        else
+            return distanceB;
+    }
 };
 
 #endif // GYRO
