@@ -18,8 +18,7 @@
 
 
 EEPROMStorage myEEPROM;
-MPU6050       myGyro;
-ledWheel      myLedWheel(&myEEPROM,&myGyro);
+ledWheel      myLedWheel(&myEEPROM);
 
 uint8_t c = 0;
 
@@ -32,10 +31,10 @@ void setup()
   myLedWheel.setup();
   wifi_init(&myEEPROM.settings());
   yield();
-  myGyro.init();
   Serial.println("...Ready!");
   yield();
-  myLedWheel.setLigthOfSpeed();
+  //myLedWheel.setLigthOfSpeed();
+  myLedWheel.setPositionLights();
   myLedWheel.flashEffect();
 }
 
@@ -43,5 +42,5 @@ void loop() {
   httpServer.handleClient();
   manageSocketClients();
   myLedWheel.update();
-  yield();
+  delay(15);
 }

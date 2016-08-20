@@ -21,7 +21,7 @@ class vuMeter{
 
     int read()
     {
-        return analogRead(m_pin);
+        return (analogRead(m_pin)+analogRead(m_pin))/2;
     }
 
   private:

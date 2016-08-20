@@ -19,7 +19,7 @@ public:
     void setClient(socketClient* c)
     {
         m_client = c;
-        connect(c,SIGNAL(sensorRead(int,int,int,int,int,int,float,int)),this,SLOT(sensorRead(int,int,int,int,int,int,float,int)));
+        connect(c,SIGNAL(sensorRead(float,float,float,float,float,float,float,int)),this,SLOT(sensorRead(float,float,float,float,float,float,float,int)));
     }
 private:
     Ui::sensorsWidget   *ui;
@@ -30,11 +30,12 @@ private:
     gSimpleGraph*       m_graph_accx;
     gSimpleGraph*       m_graph_accy;
     gSimpleGraph*       m_graph_accz;
+    gSimpleGraph*       m_graph_vuMeter;
 
     void addGraphs();
 
 protected slots:
-    void sensorRead(int Gx, int Gy, int Gz, int AcX, int AcY, int AcZ, float Temp, int vuLevel);
+    void sensorRead(float Gx, float Gy, float Gz, float AcX, float AcY, float AcZ, float Temp, int vuLevel);
 };
 
 #endif // SENSORSWIDGET_H

@@ -58,18 +58,18 @@ void wifi_init(settingList* settings)
         Serial.print(WiFi.RSSI(i));
         Serial.print(")");
         Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE)?" ":"*");
-        if(WiFi.SSID(i) == "overmind")
+        if(WiFi.SSID(i) == "AndroidAP")
         {
             Serial.print("Overmind found, joining..");
             Serial.print(WiFi.SSID(i));
             Serial.print(" - ");
-            Serial.println("obeytheoverlord");
+            Serial.println("clubmate");
             WiFi.softAPdisconnect(true);
             yield();
             WiFi.mode(WIFI_STA);
             char ssid[21];
             WiFi.SSID(i).toCharArray(ssid,20);
-            const char pass[] = "obeytheoverlord";
+            const char pass[] = "clubmate";
             WiFi.begin(ssid, pass);
             yield();
             overmindFound = true;

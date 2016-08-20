@@ -9,9 +9,9 @@
 
 class ledWheel{
 public:
-    ledWheel(EEPROMStorage* settings, MPU6050* gyro) : m_strip(&settings->settings()) , m_vuMeter(A0)
+    ledWheel(EEPROMStorage* settings) : m_strip(&settings->settings()) , m_vuMeter(A0)
     {
-        m_gyro = gyro;
+        m_gyro = new MPU6050();
         m_arrayOffset = 0;
         m_sendingSensorData = false;
     }
@@ -19,6 +19,7 @@ public:
     void setup()
     {
         m_strip.setup();
+        m_gyro->init();
         recalculateArray();
         yield();
     }
@@ -29,7 +30,7 @@ public:
         m_gyro->fullRead();
         animate();
         if(m_sendingSensorData)
-            sendSesorRead();
+            sendSensorRead();
         yield();
     }
 
@@ -43,11 +44,6 @@ public:
     {
         for(int i = 0 ; i < m_correctedLedArray.size() ; i++)
             m_correctedLedArray[i]->setColor(r,g,b);
-    }
-
-    void setBrightness(float b)
-    {
-        //Esto esta en la tira!
     }
 
     void resetEffect()
@@ -148,8 +144,8 @@ public:
 
         std::vector<ws2812Strip::led*> rside = invertLedOrder(getRightSide());
         std::vector<ws2812Strip::led*> lside = getLeftSide();
-        paintVuMeterBar(rside,percentage,0.8);
-        paintVuMeterBar(lside,percentage,0.8);
+        paintVuMeterBar(rside,percentage,0.75);
+        paintVuMeterBar(lside,percentage,0.75);
     }
 
     void setLigthOfSpeed(int value = 0)
@@ -157,13 +153,21 @@ public:
         m_currentEffect = effectSpeedLight;
         uint8_t r,g,b;
         r=0,g=0,b=0;
-        if(value >= 0)
+        if(value > -200)//compensar que el valor estatico del gx es ~ -250
         {
-            b = (value/32768.0f)*255;
+            b = value*255/32768.0f;
+            if(value >50)
+            {
+                g = b * 0.6;
+            }
         }
-        if(value < 0)
+        if(value < -300)
         {
-            r = (-value/32768.0f)*255;
+            r = -value*255/32768.0f;
+            if(value < -50)
+            {
+                g = r * 0.3;
+            }
         }
         setColor(r,g,b);
     }
@@ -176,6 +180,7 @@ public:
         }
         else if (m_currentEffect == effectDoubleCircle)
         {
+            recalculateArray();
             animateDoubleCircle();
         }
         else if (m_currentEffect == effectFlash)
@@ -184,6 +189,7 @@ public:
         }
         else if (m_currentEffect == effectRainbow)
         {
+            recalculateArray();
             animateRainbow();
         }
         else if (m_currentEffect == effectPositionLigths)
@@ -199,7 +205,7 @@ public:
         else if (m_currentEffect == effectVUMeter)
         {
             recalculateArray();
-            setVUMeter(m_vuMeter.read()*100/1024);
+            setVUMeter(m_vuMeter.read()*100/750);
         }
         else if (m_currentEffect == effectSpeedLight)
         {
@@ -331,7 +337,7 @@ private:
         }
     }
 
-    void sendSesorRead()
+    void sendSensorRead()
     {
         MPU6050* g = m_gyro;
         String str;
@@ -353,7 +359,7 @@ private:
         str += "GyZ:";
         str += g->GyZ;
         str += "|";
-        str += "AcX:";
+        str += "Temp:";
         str += g->Temp;
         str += "|";
         str += "vuMeter:";
@@ -435,6 +441,61 @@ private:
 
     void recalculateArray()
     {
+            //int gyroXval = m_gyro->GyX;
+
+//            if(gyroXval >=0)
+//            {
+//                int extraOffset = gyroXval*6/32768;
+//                m_arrayOffset = extraOffset+m_arrayOffset;
+//                if(m_arrayOffset > 360)
+//                {
+//                    m_arrayOffset -= 360;
+//                }
+//            }
+
+            float angle = abs(m_gyro->AcY*90/16000);
+            if(angle > 90)
+                return;
+
+            if(m_gyro->GyX > -200)
+            {
+                if(m_gyro->AcY > 0)
+                {
+                    if(m_gyro->acyRising)
+                        m_arrayOffset = 180+angle;
+                    else
+                        m_arrayOffset = 360-angle;
+
+                }
+                else if(m_gyro->AcY < 0)
+                {
+                    if(m_gyro->acyRising)
+                        m_arrayOffset = 180-angle;
+                    else
+                        m_arrayOffset = angle;
+                }
+
+            }
+            else if(m_gyro->GyX < -300)
+            {
+                if(m_gyro->AcY > 0)
+                {
+                    if(m_gyro->acyRising)
+                        m_arrayOffset = 360-angle;
+                    else
+                        m_arrayOffset = 180+angle;
+                }
+                else if(m_gyro->AcY < 0)
+                {
+                    if(m_gyro->acyRising)
+                        m_arrayOffset = angle;
+                    else
+                        m_arrayOffset = 180-angle;
+                }
+
+            }
+
+
             m_correctedLedArray.clear();
             uint8_t offsetleds = m_arrayOffset*m_strip.getLeds()->size()/360;
 
@@ -485,26 +546,29 @@ private:
     {
         if(percentage > 100) percentage = 100;
         int i;
-        for(i = 0 ; i < (percentage /100.0) * array.size() ; i++)
+        int max = (percentage * array.size())/100;
+        for(i = 0 ; i < max ; i++)
         {
-            uint8_t r,g,b,level,max;
-            max = (percentage /100.0) * array.size();
+            uint8_t r,g,b,level;
+            level = (i+1)*percentage/max;
 
-            level = (((float)i/max)*percentage);
-
-            if(level < 30)
+            if(level <= 0)
             {
-                r = 0, g = 0, b = 50+(level*4);
+                r = 0, g = 0, b = 0;
+            }
+            else if(level < 30)
+            {
+                r = 0, g = 0, b = 34+(level*4);
             }
             else if(level < 55)
             {
-                r = 0,  g = 100 +(level*2), b = 0;
+                r = 0,  g = 116 +(level*2), b = 0;
             }
             else if(level < 70)
             {
                 r = 100+level, g = 100+level, b = 0;
             }
-            else
+            else if(level <=100)
             {
                 r = 220, g = 0, b = 0;
             }
