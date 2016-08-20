@@ -24,16 +24,18 @@ void socketClient::readData()
         }
 
         int vuLevel;
-        float AcX,AcY,AcZ,Gx,Gy,Gz,Temp;
+        float AcX,AcY,AcZ,Gx,Gy,Gz,angleY,rawAngleY,Temp;
         AcX     =   fields[0].split(":")[1].toFloat();
         AcY     =   fields[1].split(":")[1].toFloat();
         AcZ     =   fields[2].split(":")[1].toFloat();
         Gx      =   fields[3].split(":")[1].toFloat();
         Gy      =   fields[4].split(":")[1].toFloat();
         Gz      =   fields[5].split(":")[1].toFloat();
-        Temp    =   fields[6].split(":")[1].toFloat();
-        vuLevel =   fields[7].split(":")[1].toInt();
-        emit sensorRead(Gx,Gy,Gz,AcX,AcY,AcZ,Temp,vuLevel);
+        angleY    =   fields[6].split(":")[1].toFloat();
+        rawAngleY =   fields[7].split(":")[1].toFloat();
+        Temp    =   fields[8].split(":")[1].toFloat();
+        vuLevel =   fields[9].split(":")[1].toInt();
+        emit sensorRead(Gx,Gy,Gz,AcX,AcY,AcZ,angleY,rawAngleY,Temp,vuLevel);
     }
     else
     {

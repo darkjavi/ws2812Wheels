@@ -376,6 +376,12 @@ private:
         str += "GyZ:";
         str += g->GyZ;
         str += "|";
+        str += "angleY:";
+        str += g->angleY;
+        str += "|";
+        str += "rawAngleY:";
+        str += g->rawAngleY;
+        str += "|";
         str += "Temp:";
         str += g->Temp;
         str += "|";

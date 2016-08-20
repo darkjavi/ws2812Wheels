@@ -14,7 +14,7 @@ signals:
     void tx();
     void rx();
 
-    void sensorRead(float gx,float gy,float gz, float accX,float accY,float accZ,float Temp, int vuLevel);
+    void sensorRead(float gx,float gy,float gz, float accX,float accY,float accZ,float angleY,float rangleY,float Temp, int vuLevel);
 protected slots:
     void readData();
     void sendData(QString data);

@@ -14,7 +14,7 @@ sensorsWidget::~sensorsWidget()
     delete ui;
 }
 
-void sensorsWidget::sensorRead(float Gx, float Gy, float Gz, float AcX, float AcY, float AcZ, float Temp, int vuLevel)
+void sensorsWidget::sensorRead(float Gx, float Gy, float Gz, float AcX, float AcY, float AcZ, float angleY, float rangleY, float Temp, int vuLevel)
 {
 
     ui->dial_gx->setValue(Gx);

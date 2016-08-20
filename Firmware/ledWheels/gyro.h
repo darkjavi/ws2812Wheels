@@ -18,6 +18,7 @@ public:
   void init()
   {
     on();
+    firstRead();
   }
 
   void on()
@@ -48,6 +49,12 @@ public:
 
   void firstRead()
   {
+      if(!m_activated)
+      {
+              Serial.println("Request for read the gyro, but is not activated...");
+              return;
+      }
+
       Wire.beginTransmission(MPU);
       Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
       Wire.endTransmission(false);
@@ -67,6 +74,9 @@ public:
       lastGyX  = GyY;
       lastGyX  = GyZ;
       lastTemp = Temp;
+      if( (GyX > -300) && (GyX < -200) )
+          GyX = 0;
+
       calcAngles(false);
   }
 
@@ -171,10 +181,10 @@ void calcAngles(bool filter = true)
         }
     }
 
-
+    rawAngleY = calcAngleY;
     if(!filter)
     {
-        angleY = calcAngleY;
+        angleY = rawAngleY;
         return;
     }
 
@@ -203,12 +213,12 @@ void calcAngles(bool filter = true)
         if(expectedIncrement<0)
         {
             if( (angleDiff > expectedIncrement) && (angleDiff < 0) )
-                    angleY = calcAngleY;
+                    angleY = rawAngleY;
         }
         else
         {
             if( (angleDiff < expectedIncrement) && (angleDiff > 0) )
-                    angleY = calcAngleY;
+                    angleY = rawAngleY;
         }
 
         //GyY = calcAngleY;
@@ -217,7 +227,7 @@ void calcAngles(bool filter = true)
         //AcZ = expectedIncrement;
 }
 
-  int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ,lastAcX,lastAcY,lastAcZ,lastGyX,lastGyY,lastGyZ, angleX,angleY,angleZ,lastAngleX,lastAngleY,lastAngleZ;
+  int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ,lastAcX,lastAcY,lastAcZ,lastGyX,lastGyY,lastGyZ, angleX, angleY, angleZ, rawAngleX, rawAngleY, rawAngleZ, lastAngleX, lastAngleY, lastAngleZ;
   bool      acxRising,acyRising,aczRising;
   float     Temp,lastTemp;
 
