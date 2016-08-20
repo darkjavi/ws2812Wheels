@@ -13,9 +13,10 @@ controlMainWindow::controlMainWindow(QWidget *parent) :
     connect(&m_socketClient,SIGNAL(rx()),&m_txWidget,SLOT(rx()));
 //Botones para la barra de herramientas:
     QToolButton* btnConnect     = new QToolButton(this);
-    btnConnect->setMinimumSize(128,128);
-    btnConnect->setIconSize(QSize(128,128));
+    btnConnect->setMinimumSize(64,64);
+    btnConnect->setMaximumSize(64,64);
     btnConnect->setIcon(QIcon(":/icons/icons/connect-icon.png"));
+        btnConnect->setIconSize(QSize(64,64));
     connect(btnConnect,SIGNAL(toggled(bool)),ui->connectionWidget,SLOT(connectSocket(bool)));
     btnConnect->setCheckable(true);
 
@@ -29,13 +30,13 @@ controlMainWindow::controlMainWindow(QWidget *parent) :
     QToolButton* btnShowBright  = new QToolButton(this);
     btnShowBright->setText("Bright");
     btnShowBright->setCheckable(true);
-    btnShowBright->setChecked(true);
+    btnShowBright->setChecked(false);
     connect(btnShowBright,SIGNAL(toggled(bool)),ui->groupBrightness,SLOT(setVisible(bool)));
 
     QToolButton* btnOffsetTool = new QToolButton(this);
     btnOffsetTool->setText("OffsetTool");
     btnOffsetTool->setCheckable(true);
-    btnOffsetTool->setChecked(true);
+    btnOffsetTool->setChecked(false);
     connect(btnOffsetTool,SIGNAL(toggled(bool)),ui->groupOffset ,SLOT(setVisible(bool)));
 
     QToolButton* btnShowEffects = new QToolButton(this);
@@ -52,8 +53,8 @@ controlMainWindow::controlMainWindow(QWidget *parent) :
 //
     ui->sensorViewWidget->hide();
 //    ui->effectsWidget->hide();
-//    ui->groupBrightness->hide();
-//    ui->groupOffset->hide();
+    ui->groupBrightness->hide();
+    ui->groupOffset->hide();
 
     connect(ui->connectionWidget,SIGNAL(ready())    ,this,SLOT(enableUI()));
     connect(ui->connectionWidget,SIGNAL(notReady()) ,this,SLOT(disableUI()));

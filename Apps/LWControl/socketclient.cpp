@@ -13,10 +13,11 @@ void socketClient::readData()
     emit rx();
     QString data = this->readAll().trimmed();
     //qDebug() << "DATA READ:" << data;
-    if(data.startsWith("AcX"))
+    if(data.startsWith("sensors"))
     {
         QStringList fields = data.split("|");
-        if(fields.count() != 8)
+        fields.removeFirst();
+        if(fields.count() != 10)
         {
             qDebug() << "Unexpected number of fields to parse";
             qDebug() << fields;
@@ -25,16 +26,16 @@ void socketClient::readData()
 
         int vuLevel;
         float AcX,AcY,AcZ,Gx,Gy,Gz,angleY,rawAngleY,Temp;
-        AcX     =   fields[0].split(":")[1].toFloat();
-        AcY     =   fields[1].split(":")[1].toFloat();
-        AcZ     =   fields[2].split(":")[1].toFloat();
-        Gx      =   fields[3].split(":")[1].toFloat();
-        Gy      =   fields[4].split(":")[1].toFloat();
-        Gz      =   fields[5].split(":")[1].toFloat();
-        angleY    =   fields[6].split(":")[1].toFloat();
-        rawAngleY =   fields[7].split(":")[1].toFloat();
-        Temp    =   fields[8].split(":")[1].toFloat();
-        vuLevel =   fields[9].split(":")[1].toInt();
+        AcX         =   fields[0].toFloat();
+        AcY         =   fields[1].toFloat();
+        AcZ         =   fields[2].toFloat();
+        Gx          =   fields[3].toFloat();
+        Gy          =   fields[4].toFloat();
+        Gz          =   fields[5].toFloat();
+        angleY      =   fields[6].toFloat();
+        rawAngleY   =   fields[7].toFloat();
+        Temp        =   fields[8].toFloat();
+        vuLevel     =   fields[9].toInt();
         emit sensorRead(Gx,Gy,Gz,AcX,AcY,AcZ,angleY,rawAngleY,Temp,vuLevel);
     }
     else

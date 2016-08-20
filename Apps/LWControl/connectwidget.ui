@@ -6,9 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>313</width>
-    <height>78</height>
+    <width>285</width>
+    <height>76</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>8</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>GroupBox</string>

@@ -7,6 +7,9 @@ sensorsWidget::sensorsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     addGraphs();
+    m_samplesPerSec = 0;
+    connect(&m_sampleTimer,SIGNAL(timeout()),this,SLOT(countReads()));
+    m_sampleTimer.start(1000);
 }
 
 sensorsWidget::~sensorsWidget()
@@ -16,6 +19,7 @@ sensorsWidget::~sensorsWidget()
 
 void sensorsWidget::sensorRead(float Gx, float Gy, float Gz, float AcX, float AcY, float AcZ, float angleY, float rangleY, float Temp, int vuLevel)
 {
+    m_samplesPerSec++;
 
     ui->dial_gx->setValue(Gx);
     ui->valueLabel_gx->setText(QString::number(Gx));
@@ -40,6 +44,13 @@ void sensorsWidget::sensorRead(float Gx, float Gy, float Gz, float AcX, float Ac
     ui->progressBar_acz->setValue(AcZ);
     ui->valueLabel_acz->setText(QString::number(AcZ));
     m_graph_accz->appendData(QVector<double>() << AcZ);
+
+
+    ui->dial_angleY->setValue(angleY);
+    ui->valueLabel_angleY->setText(QString::number(angleY));
+
+    ui->dial_rangleY->setValue(rangleY);
+    ui->valueLabel_rAngleY->setText(QString::number(rangleY));
 
     ui->progressBar_temp->setValue(Temp);
     ui->valueLabel_temp->setText(QString::number(Temp));
@@ -88,4 +99,15 @@ void sensorsWidget::addGraphs()
     m_graph_vuMeter->appendData(QVector<double>()<< 0);
     m_graph_vuMeter->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_vuMeter);
+}
+
+void sensorsWidget::countReads()
+{
+    QString txt;
+    txt.append("Sensors: ");
+    txt.append(QString::number(m_samplesPerSec));
+    txt.append(" Reads/s");
+    this->setTitle(txt);
+    m_samplesPerSec = 0;
+    m_sampleTimer.start();
 }
