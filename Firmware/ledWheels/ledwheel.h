@@ -357,35 +357,27 @@ private:
     void sendSensorRead()
     {
         MPU6050* g = m_gyro;
-        String str;
-        str += "AcX:";
+        String str;        
+        str += "sensors";
+        str += "|";
         str += g->AcX;
         str += "|";
-        str += "AcY:";
         str += g->AcY;
         str += "|";
-        str += "AcZ:";
         str += g->AcZ;
         str += "|";
-        str += "GyX:";
         str += g->GyX;
         str += "|";
-        str += "GyY:";
         str += g->GyY;
         str += "|";
-        str += "GyZ:";
         str += g->GyZ;
         str += "|";
-        str += "angleY:";
         str += g->angleY;
         str += "|";
-        str += "rawAngleY:";
         str += g->rawAngleY;
         str += "|";
-        str += "Temp:";
         str += g->Temp;
         str += "|";
-        str += "vuMeter:";
         str += m_vuMeter.value();
         str += "\n";
 

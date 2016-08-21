@@ -65,33 +65,33 @@ void sensorsWidget::addGraphs()
 {
     m_graph_gx = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("Gx"),500);
     m_graph_gx->appendData(QVector<double>()<< 0);
-    m_graph_gx->setMinimumHeight(60);
+    m_graph_gx->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_gx);
 
     m_graph_gy = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("Gy"),500);
     m_graph_gy->appendData(QVector<double>()<< 0);
-    m_graph_gy->setMinimumHeight(40);
+    m_graph_gy->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_gy);
 
     m_graph_gz = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("Gz"),500);
     m_graph_gz->appendData(QVector<double>()<< 0);
-    m_graph_gz->setMinimumHeight(40);
+    m_graph_gz->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_gz);
 
 
     m_graph_accx = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("accX"),500);
     m_graph_accx->appendData(QVector<double>()<< 0);
-    m_graph_accx->setMinimumHeight(60);
+    m_graph_accx->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_accx);
 
     m_graph_accy = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("accY"),500);
     m_graph_accy->appendData(QVector<double>()<< 0);
-    m_graph_accy->setMinimumHeight(40);
+    m_graph_accy->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_accy);
 
     m_graph_accz = new gSimpleGraph(ui->graficos,QVector<QString>()<<QString("accZ"),500);
     m_graph_accz->appendData(QVector<double>()<< 0);
-    m_graph_accz->setMinimumHeight(40);
+    m_graph_accz->setMinimumHeight(80);
     ui->graficos->layout()->addWidget(m_graph_accz);
 
 

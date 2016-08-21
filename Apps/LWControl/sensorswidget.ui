@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>446</width>
+    <width>448</width>
     <height>432</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <pointsize>6</pointsize>
+    <pointsize>7</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -883,6 +883,11 @@
         <width>400</width>
         <height>300</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
       </property>
       <property name="widgetResizable">
        <bool>true</bool>

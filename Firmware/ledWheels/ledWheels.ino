@@ -42,5 +42,5 @@ void loop() {
   httpServer.handleClient();
   manageSocketClients();
   myLedWheel.update();
-  delay(10);
+  delay(5);
 }

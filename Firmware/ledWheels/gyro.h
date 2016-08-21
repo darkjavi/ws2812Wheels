@@ -13,7 +13,11 @@
 
 class MPU6050 {
 public:
-  MPU6050() {}
+  MPU6050()
+  {
+      angleY    = 0;
+      rawAngleY = 0;
+  }
 
   void init()
   {
@@ -75,7 +79,7 @@ public:
       lastGyX  = GyZ;
       lastTemp = Temp;
       if( (GyX > -300) && (GyX < -200) )
-          GyX = 0;
+          GyX = -300;
 
       calcAngles(false);
   }
@@ -138,13 +142,13 @@ public:
 
 void calcAngles(bool filter = true)
 {
-    float angle = abs(AcY*90/17500);
+    float angle = abs(AcY*90/15500);
     if(angle > 90)
         return;
 
-    float calcAngleY = angleY;
+    float calcAngleY = rawAngleY;
 
-    if(GyX > -225)
+    if(GyX > -250)
     {
         if(AcY > 0)
         {
@@ -163,7 +167,7 @@ void calcAngles(bool filter = true)
         }
 
     }
-    else if(GyX < -285)
+    else// if(GyX < -285)
     {
         if(AcY > 0)
         {
@@ -195,17 +199,17 @@ void calcAngles(bool filter = true)
 
         if(abs(GyX) < 32000)
         {
-            expectedIncrement = GyX * 30.0f /32768.0f;
-            if(abs(expectedIncrement) < 5)
+            expectedIncrement = GyX * 40.0f /32768.0f;
+            if(abs(expectedIncrement) < 10)
             {
-                expectedIncrement = 5;
+                expectedIncrement = 10;
                 if(GyX < 0)
                     expectedIncrement *= -1;
             }
         }
         else
         {
-            expectedIncrement = 50;
+            expectedIncrement = 100;
             if(GyX < 0)
                 expectedIncrement *= -1;
         }
@@ -220,11 +224,6 @@ void calcAngles(bool filter = true)
             if( (angleDiff < expectedIncrement) && (angleDiff > 0) )
                     angleY = rawAngleY;
         }
-
-        //GyY = calcAngleY;
-        //GyZ = angleDiff;
-        //AcX = angleY;
-        //AcZ = expectedIncrement;
 }
 
   int16_t   AcX,AcY,AcZ,GyX,GyY,GyZ,lastAcX,lastAcY,lastAcZ,lastGyX,lastGyY,lastGyZ, angleX, angleY, angleZ, rawAngleX, rawAngleY, rawAngleZ, lastAngleX, lastAngleY, lastAngleZ;
