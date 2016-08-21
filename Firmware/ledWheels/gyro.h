@@ -38,7 +38,7 @@ public:
 //    MPU6050_SetDLPF(0); // Setting the DLPF to inf Bandwidth for calibration
     yield();
     //MPU6050_OffsetCal();
-    MPU6050_SetDLPF(6); // Setting the DLPF to lowest Bandwidth
+//    MPU6050_SetDLPF(6); // Setting the DLPF to lowest Bandwidth
     m_activated = true;
   }
   void off()
@@ -116,7 +116,8 @@ public:
     Wire.endTransmission(false);
     Wire.requestFrom(MPU,14,true);  // request a total of 14 registers
 
-    int16_t secondRead =  Wire.read()<<8|Wire.read();
+    int16_t secondRead;
+    secondRead =  Wire.read()<<8|Wire.read();
     AcX  += (secondRead -  AcX) /2;
     secondRead =  Wire.read()<<8|Wire.read();
     AcY  += (secondRead -  AcY) /2;
@@ -156,7 +157,6 @@ void calcAngles(bool filter = true)
                 calcAngleY = 180+angle;
             else
                 calcAngleY = 360-angle;
-
         }
         else if(AcY < 0)
         {
@@ -165,7 +165,6 @@ void calcAngles(bool filter = true)
             else
                 calcAngleY = angle;
         }
-
     }
     else// if(GyX < -285)
     {
@@ -234,7 +233,7 @@ protected:
     bool	  m_activated = false;
     const int     MPU=0x68;  // I2C address of the MPU-6050
 
-    float getAngleDifference(float a, float b)
+    float getAngleDifference(const float& a, const float& b)
     {
         float distanceA = 0;
         float distanceB = 0;

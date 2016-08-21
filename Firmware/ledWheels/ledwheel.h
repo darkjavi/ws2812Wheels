@@ -150,25 +150,26 @@ public:
         paintVuMeterBar(lside,percentage,0.75);
     }
 
-    void setLigthOfSpeed(int value = 0)
+    void setLigthOfSpeed(int16_t value = 0)
     {
         m_currentEffect = effectSpeedLight;
         uint8_t r,g,b;
         r=0,g=0,b=0;
-        if(value > -200)//compensar que el valor estatico del gx es ~ -250
+
+        if(value > -220)//compensar que el valor estatico del gx es ~ -250
         {
-            b = value*255/32768.0f;
-            if(value >50)
+            b = abs(value)*255/32768.0f;
+            if(b > 100)
             {
-                g = b * 0.6;
+                g = b * 0.5;
             }
         }
-        if(value < -300)
+        if(value < -260)
         {
-            r = -value*255/32768.0f;
-            if(value < -50)
+            r = abs(value)*255/32768.0f;
+            if(r > 100)
             {
-                g = r * 0.3;
+                g = r * 0.5;
             }
         }
         setColor(r,g,b);
@@ -214,6 +215,8 @@ public:
         {
             recalculateArray();
             setPercentage(m_counter1++);
+            if(m_counter1 > 100)
+                m_counter1 = 0;
         }
         else if (m_currentEffect == effectVUMeter)
         {
@@ -391,7 +394,7 @@ private:
 
     void animateCircle()
     {
-        if(m_counter1 == m_correctedLedArray.size()-1) m_counter1 = 0;
+        if(m_counter1 >= m_correctedLedArray.size()-1) m_counter1 = 0;
         off();
         m_correctedLedArray[m_counter1]->setColor((m_counter1*3),50,(m_counter1*3));
         m_correctedLedArray[m_counter1+1]->setColor((m_counter1*3),50,(m_counter1*3));
@@ -400,7 +403,9 @@ private:
 
     void animateDoubleCircle()
     {
-        if(m_counter1 == m_correctedLedArray.size()-1) m_counter1 = 0;
+        if(m_counter1 >= m_correctedLedArray.size()-1) m_counter1 = 0;
+        if(m_counter2 >= m_correctedLedArray.size()-1) m_counter2 = 0;
+
         if(m_counter2 == 0) m_counter2 = m_correctedLedArray.size()-1;
         off();
         m_correctedLedArray[m_counter1]->setColor((m_counter1*3),50,(m_counter1*3));

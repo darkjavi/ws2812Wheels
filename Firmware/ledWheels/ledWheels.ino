@@ -33,8 +33,8 @@ void setup()
   yield();
   Serial.println("...Ready!");
   yield();
-  //myLedWheel.setLigthOfSpeed();
-  myLedWheel.setPositionLights();;
+  myLedWheel.setLigthOfSpeed();
+  //myLedWheel.setPositionLights();;
   myLedWheel.flashEffect();
 }
 
